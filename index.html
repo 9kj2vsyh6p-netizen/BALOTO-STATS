@@ -36,8 +36,6 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow-x: hidden; }
-
-    /* SPLASH */
     #splash { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; transition: opacity 0.4s; }
     #splash .logo-big { font-size: 64px; margin-bottom: 16px; }
     #splash h1 { font-size: 26px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
@@ -45,28 +43,20 @@
     #splash .bar { width: 120px; height: 3px; background: var(--bg3); border-radius: 2px; margin-top: 32px; overflow: hidden; }
     #splash .bar-fill { height: 100%; width: 0%; background: var(--blue); border-radius: 2px; animation: load 1.2s ease forwards; }
     @keyframes load { to { width: 100%; } }
-
-    /* LAYOUT */
     #app { display: flex; flex-direction: column; min-height: 100vh; max-width: 480px; margin: 0 auto; }
     header { padding: 20px 20px 0; }
     .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
     .app-title { font-size: 20px; font-weight: 700; }
     .app-title span { color: var(--blue); }
     .header-badge { font-size: 11px; background: var(--green-bg); color: var(--green); padding: 4px 10px; border-radius: 20px; font-weight: 600; }
-
-    /* GAME TABS */
     .game-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
     .gtab { flex: 1; padding: 10px 6px; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: transparent; color: var(--text2); font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; transition: all 0.18s; }
     .gtab .tab-emoji { display: block; font-size: 20px; margin-bottom: 3px; }
     .gtab.active { border-color: var(--blue); background: var(--blue-bg); color: var(--blue); }
     .gtab:active { transform: scale(0.96); }
-
-    /* GAME INFO PILL */
     .game-pill { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 20px; display: flex; gap: 16px; flex-wrap: wrap; }
     .pill-item { font-size: 12px; color: var(--text2); }
     .pill-item strong { display: block; color: var(--text); font-size: 14px; font-weight: 600; margin-bottom: 1px; }
-
-    /* ALGO SECTION */
     .section-label { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
     .algo-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 20px; scrollbar-width: none; }
     .algo-scroll::-webkit-scrollbar { display: none; }
@@ -76,21 +66,15 @@
     .algo-chip .chip-icon { font-size: 22px; display: block; margin-bottom: 4px; }
     .algo-chip .chip-name { font-size: 11px; font-weight: 600; color: var(--text2); }
     .algo-chip.active .chip-name { color: var(--purple); }
-
-    /* METHOD BOX */
     .method-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 20px; }
     .method-box h3 { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
     .method-box p { font-size: 12px; color: var(--text2); line-height: 1.6; }
-
-    /* CONTROLS */
     .controls { display: flex; gap: 10px; margin-bottom: 24px; align-items: stretch; }
     .qty-wrap { display: flex; flex-direction: column; gap: 4px; }
     .qty-wrap label { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
     .qty-wrap select { padding: 0 12px; height: 50px; border-radius: var(--radius-sm); border: 1.5px solid var(--border2); background: var(--bg2); color: var(--text); font-size: 15px; font-weight: 600; appearance: none; -webkit-appearance: none; cursor: pointer; }
     .gen-btn { flex: 1; height: 50px; border-radius: var(--radius); border: none; background: var(--blue); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.18s; letter-spacing: 0.01em; }
     .gen-btn:active { transform: scale(0.97); background: #2e73e8; }
-
-    /* RESULTS */
     .combo-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; animation: fadeIn 0.3s ease; }
     @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
     .combo-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -102,8 +86,6 @@
     .ball-super-baloto { background: #2e1f08; color: #f59e0b; border: 1.5px solid #5a3d10; width: 46px; height: 46px; font-size: 15px; }
     .ball-super-millon { background: #0d2b1a; color: #3ecf8e; border: 1.5px solid #1a5c3a; width: 46px; height: 46px; font-size: 15px; }
     .ball-sep { color: var(--text3); font-size: 20px; margin: 0 2px; }
-
-    /* STATS */
     .stats-section { margin-top: 8px; margin-bottom: 24px; }
     .stat-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
     .stat-box h3 { font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
@@ -117,11 +99,7 @@
     .super-pill { display: flex; flex-direction: column; align-items: center; gap: 3px; }
     .super-pill .snum { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
     .super-pill .sval { font-size: 10px; color: var(--text3); }
-
-    /* DISCLAIMER */
     .disclaimer { font-size: 11px; color: var(--text3); text-align: center; padding: 0 20px 32px; line-height: 1.6; }
-
-    /* PADDING */
     main { padding: 0 20px; flex: 1; }
   </style>
 </head>
@@ -142,15 +120,11 @@
     </div>
     <div class="game-tabs" id="gameTabs"></div>
   </header>
-
   <main>
     <div class="game-pill" id="gamePill"></div>
-
     <div class="section-label">Algoritmo</div>
     <div class="algo-scroll" id="algoScroll"></div>
-
     <div class="method-box" id="methodBox"></div>
-
     <div class="controls">
       <div class="qty-wrap">
         <label>Jugadas</label>
@@ -160,25 +134,21 @@
       </div>
       <button class="gen-btn" id="genBtn" onclick="generate()">⚡ Generar</button>
     </div>
-
     <div id="results"></div>
-
     <div id="ultimos"></div>
-
     <div class="stats-section">
       <div class="section-label">Estadísticas históricas</div>
       <div id="statsArea"></div>
     </div>
   </main>
-
   <p class="disclaimer">⚠️ Uso educativo y entretenimiento. Ningún algoritmo garantiza premios. La lotería es 100% azar. Juega con responsabilidad.</p>
 </div>
 
 <script>
 const GAMES = {
-  baloto:   { name:'Baloto',   emoji:'🎱', mainRange:[1,43], mainCount:5, hasSuper:true,  superRange:[1,16], superLabel:'SuperBalota', superClass:'ball-super-baloto', color:'#4a8fff', desc:'5 números del 1–43', draw:'Mar y Vie', prize:'Pozo acumulado' },
-  revancha: { name:'Revancha', emoji:'🔄', mainRange:[1,43], mainCount:5, hasSuper:true,  superRange:[1,16], superLabel:'SuperBalota', superClass:'ball-super-baloto', color:'#a78bfa', desc:'Misma cartilla Baloto', draw:'Mar y Vie', prize:'Premio fijo' },
-  miloto:   { name:'Miloto',   emoji:'⭐', mainRange:[1,39], mainCount:5, hasSuper:false, superRange:null,   superLabel:null,          superClass:null,                color:'#3ecf8e', desc:'5 números del 1–39', draw:'Jueves', prize:'Fijo + acumulado' }
+  baloto:   { name:'Baloto',   emoji:'🎱', mainRange:[1,43], mainCount:5, hasSuper:true,  superRange:[1,16], superLabel:'SuperBalota', superClass:'ball-super-baloto', color:'#4a8fff', desc:'5 números del 1–43', draw:'Lun, Mié y Sáb', prize:'Pozo acumulado' },
+  revancha: { name:'Revancha', emoji:'🔄', mainRange:[1,43], mainCount:5, hasSuper:true,  superRange:[1,16], superLabel:'SuperBalota', superClass:'ball-super-baloto', color:'#a78bfa', desc:'Misma cartilla Baloto', draw:'Lun, Mié y Sáb', prize:'Premio fijo' },
+  miloto:   { name:'Miloto',   emoji:'⭐', mainRange:[1,39], mainCount:5, hasSuper:false, superRange:null,   superLabel:null,          superClass:null,                color:'#3ecf8e', desc:'5 números del 1–39', draw:'Lun, Mar, Jue y Vie', prize:'Fijo + acumulado' }
 };
 
 const ALGOS = [
@@ -203,10 +173,8 @@ async function loadRealData() {
   try {
     const r = await fetch('data/resultados.json?t=' + Date.now());
     realData = await r.json();
-    console.log('Datos reales cargados:', realData.ultima_actualizacion);
     return true;
   } catch(e) {
-    console.warn('No se pudo cargar resultados.json, usando simulación:', e);
     return false;
   }
 }
@@ -216,9 +184,7 @@ function buildFreqsFromReal(gameId, which) {
   const pool = which === 'main' ? range(...g.mainRange) : range(...g.superRange);
   const f = {};
   pool.forEach(n => f[n] = 0);
-
   if (!realData || !realData[gameId]) return simFreqs(pool);
-
   const sorteos = realData[gameId];
   sorteos.forEach(s => {
     if (which === 'main') {
@@ -227,8 +193,6 @@ function buildFreqsFromReal(gameId, which) {
       if (s.super && f[s.super] !== undefined) f[s.super]++;
     }
   });
-
-  // Si hay menos de 10 sorteos reales, complementar con simulación
   if (sorteos.length < 10) {
     const sim = simFreqs(pool);
     pool.forEach(n => f[n] = (f[n] || 0) + Math.round((sim[n] || 0) * 0.3));
@@ -260,7 +224,7 @@ const ALGO_FNS = {
   delta(pool,count){            const mn=Math.min(...pool),mx=Math.max(...pool),td=[1,2,3,3,4,5,6,7,8]; for(let t=0;t<200;t++){const seed=mn+Math.floor(Math.random()*Math.ceil((mx-mn)*0.3)),dl=Array.from({length:count-1},()=>td[Math.floor(Math.random()*td.length)]),nm=[seed]; dl.forEach(d=>nm.push(nm[nm.length-1]+d)); if(nm.every(n=>n>=mn&&n<=mx)&&new Set(nm).size===count)return nm.sort((a,b)=>a-b);} return pickRandom(pool,count).sort((a,b)=>a-b); }
 };
 
-function setGame(g){ currentGame=g; freqCache[currentGame+'_main']=null; freqCache[currentGame+'_super']=null; Object.keys(freqCache).forEach(k=>{ if(k.startsWith(currentGame)) delete freqCache[k]; }); renderAll(); }
+function setGame(g){ currentGame=g; Object.keys(freqCache).forEach(k=>{ if(k.startsWith(currentGame)) delete freqCache[k]; }); renderAll(); }
 function setAlgo(a){ currentAlgo=a; renderAlgos(); renderMethod(); document.getElementById('results').innerHTML=''; }
 function renderAll(){ renderTabs(); renderPill(); renderAlgos(); renderMethod(); renderStats(); renderUltimos(); document.getElementById('results').innerHTML=''; }
 
@@ -361,7 +325,6 @@ function renderStats(){
   const mainPool=range(...g.mainRange);
   const sorted=[...mainPool].sort((a,b)=>(mf[b]||0)-(mf[a]||0));
   const maxM=Math.max(...mainPool.map(n=>mf[n]||0));
-
   let superBox='';
   if(g.hasSuper){
     const sf=getFreqs(currentGame,'super');
@@ -375,7 +338,6 @@ function renderStats(){
       </div>
     </div>`;
   }
-
   document.getElementById('statsArea').innerHTML=`
     <div class="stat-box">
       <h3>🔥 Números más calientes</h3>
@@ -400,7 +362,5 @@ window.addEventListener('load', async () => {
   },1400);
 });
 </script>
-
-
 </body>
 </html>
