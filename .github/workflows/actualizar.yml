@@ -1,1 +1,44 @@
 actualizar.yml
+name: Actualizar resultados Baloto
+
+on:
+  schedule:
+    - cron: '0 3 * * 3'
+    - cron: '0 3 * * 6'
+    - cron: '0 3 * * 5'
+  workflow_dispatch:
+
+jobs:
+  scrape-and-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias
+        run: pip install requests beautifulsoup4 lxml
+
+      - name: Correr scraper
+        run: python scraper.py
+
+      - name: Verificar cambios
+        id: cambios
+        run: |
+          git diff --quiet data/resultados.json || echo "hay_cambios=true" >> $GITHUB_OUTPUT
+
+      - name: Commit y push
+        if: steps.cambios.outputs.hay_cambios == 'true'
+        run: |
+          git config user.name "Baloto Bot"
+          git config user.email "bot@baloto-stats"
+          git add data/resultados.json
+          git commit -m "Actualizar resultados $(date +'%Y-%m-%d')"
+          git push
