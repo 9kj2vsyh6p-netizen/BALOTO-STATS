@@ -260,9 +260,19 @@ function getFreqs(gameId, which){
 
   const k = gameId + '_' + which;
 
-  if (!freqCache[k]) {
+  if(!freqCache[k]){
 
-    ...
+    freqCache[k] = realData
+      ? buildFreqsFromReal(gameId, which)
+      : simFreqs(
+          range(
+            ...GAMES[gameId][
+              which === 'main'
+                ? 'mainRange'
+                : 'superRange'
+            ]
+          )
+        );
 
   }
 
@@ -270,37 +280,8 @@ function getFreqs(gameId, which){
 
 }
 
-function getDelayedNumbers(gameId){
 
-  const g = GAMES[gameId];
 
-  const delays = {};
-
-  for(let n=1;n<=g.mainRange[1];n++){
-    delays[n]=999;
-  }
-
-  if(!realData || !realData[gameId]){
-    return delays;
-  }
-
-  const draws = realData[gameId];
-
-  for(let i=0;i<draws.length;i++){
-
-    const nums = draws[i].numeros || [];
-
-    nums.forEach(n=>{
-
-      if(delays[n]===999){
-        delays[n]=i;
-      }
-
-    });
-
-  }
-
-  return delays;
 
 }
 
