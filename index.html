@@ -277,13 +277,6 @@ function getFreqs(gameId, which){
   return freqCache[k];
 
 }
-
-
-
-
-
-}
-
 const ALGO_FNS = {
   frecuencia(pool,count,freqs){ const s=[...pool].sort((a,b)=>(freqs[b]||0)-(freqs[a]||0)); return pickRandom(s.slice(0,Math.ceil(pool.length*0.4)),count); },
   frio(pool,count,freqs){       const s=[...pool].sort((a,b)=>(freqs[a]||0)-(freqs[b]||0)); return pickRandom(s.slice(0,Math.ceil(pool.length*0.4)),count); },
