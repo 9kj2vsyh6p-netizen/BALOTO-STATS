@@ -152,12 +152,61 @@ const GAMES = {
 };
 
 const ALGOS = [
-  { id:'frecuencia', icon:'🔥', name:'Calientes', explain:'Prioriza los números con mayor frecuencia histórica acumulada de sorteos reales.' },
-  { id:'frio',       icon:'❄️', name:'Fríos',     explain:'Elige los números menos sorteados que acumulan retraso estadístico en datos reales.' },
-  { id:'mixto',      icon:'⚖️', name:'Mixto',     explain:'60% calientes + 40% fríos. Equilibra tendencia histórica y compensación.' },
-  { id:'par_impar',  icon:'🔢', name:'Par/Impar', explain:'Distribuye 3 impares + 2 pares, la combinación ganadora más frecuente históricamente.' },
-  { id:'cuadrantes', icon:'🗺️', name:'Cuadrantes',explain:'Divide el rango en 4 zonas y garantiza al menos 1 número por zona.' },
-  { id:'delta',      icon:'📐', name:'Delta',     explain:'Construye combinaciones desde diferencias típicas entre números consecutivos (1–8).' }
+  {
+    id:'frecuencia',
+    icon:'🔥',
+    name:'Calientes',
+    explain:'Prioriza los números con mayor frecuencia histórica acumulada.'
+  },
+
+  {
+    id:'frio',
+    icon:'❄️',
+    name:'Fríos',
+    explain:'Elige los números menos sorteados históricamente.'
+  },
+
+  {
+    id:'retrasados',
+    icon:'⏳',
+    name:'Retrasados',
+    explain:'Selecciona números que llevan más sorteos sin aparecer.'
+  },
+
+  {
+    id:'ia',
+    icon:'🤖',
+    name:'IA Balanceada',
+    explain:'Combina frecuencia, retraso y equilibrio estadístico.'
+  },
+
+  {
+    id:'mixto',
+    icon:'⚖️',
+    name:'Mixto',
+    explain:'60% calientes + 40% fríos.'
+  },
+
+  {
+    id:'par_impar',
+    icon:'🔢',
+    name:'Par/Impar',
+    explain:'Distribuye 3 impares y 2 pares.'
+  },
+
+  {
+    id:'cuadrantes',
+    icon:'🗺️',
+    name:'Cuadrantes',
+    explain:'Garantiza números en distintas zonas.'
+  },
+
+  {
+    id:'delta',
+    icon:'📐',
+    name:'Delta',
+    explain:'Construye combinaciones usando diferencias típicas.'
+  }
 ];
 
 let currentGame = 'baloto';
@@ -208,11 +257,51 @@ function simFreqs(pool){
 }
 
 function getFreqs(gameId, which){
+
   const k = gameId + '_' + which;
+
   if (!freqCache[k]) {
-    freqCache[k] = realData ? buildFreqsFromReal(gameId, which) : simFreqs(range(...GAMES[gameId][which==='main'?'mainRange':'superRange']));
+
+    ...
+
   }
+
   return freqCache[k];
+
+}
+
+function getDelayedNumbers(gameId){
+
+  const g = GAMES[gameId];
+
+  const delays = {};
+
+  for(let n=1;n<=g.mainRange[1];n++){
+    delays[n]=999;
+  }
+
+  if(!realData || !realData[gameId]){
+    return delays;
+  }
+
+  const draws = realData[gameId];
+
+  for(let i=0;i<draws.length;i++){
+
+    const nums = draws[i].numeros || [];
+
+    nums.forEach(n=>{
+
+      if(delays[n]===999){
+        delays[n]=i;
+      }
+
+    });
+
+  }
+
+  return delays;
+
 }
 
 const ALGO_FNS = {
@@ -221,6 +310,43 @@ const ALGO_FNS = {
   mixto(pool,count,freqs){      const s=[...pool].sort((a,b)=>(freqs[b]||0)-(freqs[a]||0)),h=Math.ceil(pool.length*0.4),hc=Math.ceil(count*0.6),cc=count-hc; return shuffle([...pickRandom(s.slice(0,h),hc),...pickRandom(s.slice(-h),cc)]); },
   par_impar(pool,count){        const ev=pool.filter(n=>n%2===0),od=pool.filter(n=>n%2!==0),no=Math.round(count*0.6),ne=count-no; return shuffle([...pickRandom(od,no),...pickRandom(ev,ne)]); },
   cuadrantes(pool,count){       const mx=Math.max(...pool),qs=Math.ceil(mx/4),qa=[[],[],[],[]]; pool.forEach(n=>qa[Math.min(3,Math.floor((n-1)/qs))].push(n)); const r=[]; qa.forEach(q=>{if(q.length)r.push(...pickRandom(q,1));}); const rem=count-r.length; if(rem>0){const u=pool.filter(n=>!r.includes(n));r.push(...pickRandom(u,Math.min(rem,u.length)));} return r.slice(0,count).sort((a,b)=>a-b); },
+retrasados(pool,count){
+
+  const delays = getDelayedNumbers(currentGame);
+
+  const sorted = [...pool]
+    .sort((a,b)=>delays[b]-delays[a]);
+
+  return pickRandom(
+    sorted.slice(0,Math.ceil(pool.length*0.4)),
+    count
+  );
+
+},
+
+ia(pool,count,freqs){
+
+  const delays = getDelayedNumbers(currentGame);
+
+  const ranked = [...pool]
+    .map(n=>({
+
+      n,
+
+      score:
+        ((freqs[n]||0)*0.6)
+        +
+        ((delays[n]||0)*0.4)
+
+    }))
+    .sort((a,b)=>b.score-a.score);
+
+  return pickRandom(
+    ranked.slice(0,15).map(x=>x.n),
+    count
+  );
+
+},
   delta(pool,count){            const mn=Math.min(...pool),mx=Math.max(...pool),td=[1,2,3,3,4,5,6,7,8]; for(let t=0;t<200;t++){const seed=mn+Math.floor(Math.random()*Math.ceil((mx-mn)*0.3)),dl=Array.from({length:count-1},()=>td[Math.floor(Math.random()*td.length)]),nm=[seed]; dl.forEach(d=>nm.push(nm[nm.length-1]+d)); if(nm.every(n=>n>=mn&&n<=mx)&&new Set(nm).size===count)return nm.sort((a,b)=>a-b);} return pickRandom(pool,count).sort((a,b)=>a-b); }
 };
 
