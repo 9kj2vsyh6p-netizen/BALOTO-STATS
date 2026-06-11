@@ -262,23 +262,22 @@ function getFreqs(gameId, which){
 
   if(!freqCache[k]){
 
+    const g = GAMES[gameId];
+
+    const pool = which === 'main'
+      ? range(g.mainRange[0], g.mainRange[1])
+      : range(g.superRange[0], g.superRange[1]);
+
     freqCache[k] = realData
       ? buildFreqsFromReal(gameId, which)
-      : simFreqs(
-          range(
-            ...GAMES[gameId][
-              which === 'main'
-                ? 'mainRange'
-                : 'superRange'
-            ]
-          )
-        );
+      : simFreqs(pool);
 
   }
 
   return freqCache[k];
 
 }
+
 
 
 
@@ -328,7 +327,9 @@ ia(pool,count,freqs){
   );
 
 },
-  delta(pool,count){            const mn=Math.min(...pool),mx=Math.max(...pool),td=[1,2,3,3,4,5,6,7,8]; for(let t=0;t<200;t++){const seed=mn+Math.floor(Math.random()*Math.ceil((mx-mn)*0.3)),dl=Array.from({length:count-1},()=>td[Math.floor(Math.random()*td.length)]),nm=[seed]; dl.forEach(d=>nm.push(nm[nm.length-1]+d)); if(nm.every(n=>n>=mn&&n<=mx)&&new Set(nm).size===count)return nm.sort((a,b)=>a-b);} return pickRandom(pool,count).sort((a,b)=>a-b); }
+  delta(pool,count){
+    return pickRandom(pool,count);
+}
 };
 
 function setGame(g){ currentGame=g; Object.keys(freqCache).forEach(k=>{ if(k.startsWith(currentGame)) delete freqCache[k]; }); renderAll(); }
