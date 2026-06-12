@@ -142,6 +142,34 @@ main { padding: 0 20px; flex: 1; }
 .mc-meta-pill { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 600; }
 
 
+
+/* ── VERIFICADOR DE CARTILLAS ── */
+.ver-section { padding: 0 20px; margin-bottom: 24px; }
+.ver-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.ver-box h3 { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+.ver-inputs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.ver-input { width: 52px; height: 52px; border-radius: 50%; border: 1.5px solid var(--border2); background: var(--bg3); color: var(--text); font-size: 16px; font-weight: 700; text-align: center; outline: none; transition: border-color 0.2s; -moz-appearance: textfield; }
+.ver-input::-webkit-inner-spin-button, .ver-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.ver-input:focus { border-color: var(--blue); }
+.ver-input.super { border-color: rgba(245,158,11,0.4); background: rgba(46,31,8,0.5); color: var(--amber); }
+.ver-input.super:focus { border-color: var(--amber); }
+.ver-sep { color: var(--text3); font-size: 20px; align-self: center; }
+.ver-btn { width: 100%; height: 46px; border-radius: var(--radius-sm); border: none; background: var(--blue); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 4px; transition: all 0.18s; }
+.ver-btn:active { transform: scale(0.98); filter: brightness(0.88); }
+.ver-resultado { margin-top: 14px; border-radius: var(--radius-sm); padding: 14px; display: none; }
+.ver-resultado.visible { display: block; animation: fadeIn 0.3s ease; }
+.ver-resultado.ganador { background: rgba(62,207,142,0.10); border: 1px solid rgba(62,207,142,0.3); }
+.ver-resultado.no-ganador { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); }
+.ver-resultado.parcial { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); }
+.ver-res-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+.ver-match-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.ver-match-fecha { font-size: 11px; color: var(--text3); min-width: 76px; }
+.ver-match-ball { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+.ver-match-ball.hit { background: rgba(62,207,142,0.2); color: #3ecf8e; border: 1.5px solid rgba(62,207,142,0.4); }
+.ver-match-ball.miss { background: var(--bg3); color: var(--text3); border: 1.5px solid var(--border); }
+.ver-match-hits { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-left: 4px; }
+.ver-hint { font-size: 11px; color: var(--text3); margin-top: 10px; line-height: 1.6; }
+
 /* ── MILOTO IDENTIDAD ── */
 .miloto-banner { background: linear-gradient(135deg, rgba(62,207,142,0.08), rgba(62,207,142,0.03)); border: 1px solid rgba(62,207,142,0.25); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; display: none; }
 .miloto-banner.visible { display: block; }
@@ -250,6 +278,19 @@ main { padding: 0 20px; flex: 1; }
       <div class="section-label">📊 Estadísticas avanzadas</div>
       <div id="advArea"></div>
     </div>
+
+    <!-- VERIFICADOR DE CARTILLAS -->
+    <div class="ver-section" id="verificadorSection">
+      <div class="section-label">✅ Verificador de cartilla</div>
+      <div class="ver-box">
+        <h3>✅ Ingresa tu cartilla</h3>
+        <div id="verInputsWrap" class="ver-inputs"></div>
+        <button class="ver-btn" onclick="verificarCartilla()">🔍 Verificar en historial</button>
+        <div class="ver-resultado" id="verResultado"></div>
+        <div class="ver-hint" id="verHint"></div>
+      </div>
+    </div>
+
   <p class="disclaimer">⚠️ Uso educativo y entretenimiento. Ningún algoritmo garantiza premios. La lotería es 100% azar. Juega con responsabilidad.</p>
 </div>
 
@@ -785,6 +826,7 @@ function renderAll() {
   renderUltimos();
   renderAdvStats();
   renderMilotoBanner();
+  renderVerificadorInputs();
   document.getElementById('results').innerHTML = '';
   document.getElementById('mc-progress').classList.remove('visible');
   const btn = document.getElementById('genBtn');
@@ -919,6 +961,175 @@ function renderStats() {
 }
 
 
+
+
+/* ═══════════════════════════════════════════════
+   VERIFICADOR DE CARTILLAS
+═══════════════════════════════════════════════ */
+
+function renderVerificadorInputs() {
+  const g   = GAMES[currentGame];
+  const wrap = document.getElementById('verInputsWrap');
+  if (!wrap) return;
+
+  let html = '';
+  for (let i = 0; i < g.mainCount; i++) {
+    html += `<input class="ver-input" type="number" id="vn${i}" min="1" max="${g.mainRange[1]}" placeholder="${i+1}" onkeydown="verTabNext(event,${i})">`;
+  }
+  if (g.hasSuper) {
+    html += `<span class="ver-sep">+</span>`;
+    html += `<input class="ver-input super" type="number" id="vs0" min="1" max="${g.superRange[1]}" placeholder="S" onkeydown="verTabNext(event,${g.mainCount})">`;
+  }
+  wrap.innerHTML = html;
+
+  // Limpiar resultado anterior
+  const res = document.getElementById('verResultado');
+  if (res) { res.classList.remove('visible','ganador','no-ganador','parcial'); res.innerHTML=''; }
+  const hint = document.getElementById('verHint');
+  if (hint) hint.innerHTML = `Rango válido: 1–${g.mainRange[1]}${g.hasSuper ? ' + SuperBalota 1–'+g.superRange[1] : ''} · Se busca en ${realData?(realData[currentGame]||[]).length:0} sorteos históricos`;
+}
+
+function verTabNext(e, idx) {
+  if (e.key === 'Enter' || e.key === 'Tab') {
+    e.preventDefault();
+    const g = GAMES[currentGame];
+    const total = g.mainCount + (g.hasSuper ? 1 : 0);
+    if (idx < total - 1) {
+      const next = idx < g.mainCount ? document.getElementById('vn'+(idx+1)) : document.getElementById('vs0');
+      if (next) next.focus();
+    } else {
+      verificarCartilla();
+    }
+  }
+}
+
+function verificarCartilla() {
+  const g       = GAMES[currentGame];
+  const res     = document.getElementById('verResultado');
+  const hint    = document.getElementById('verHint');
+  if (!res) return;
+
+  // Leer números ingresados
+  const misNums = [];
+  for (let i = 0; i < g.mainCount; i++) {
+    const el = document.getElementById('vn'+i);
+    const v  = parseInt(el ? el.value : '');
+    if (isNaN(v) || v < g.mainRange[0] || v > g.mainRange[1]) {
+      res.className = 'ver-resultado visible no-ganador';
+      res.innerHTML = `<div class="ver-res-title" style="color:var(--red)">⚠️ Número inválido en posición ${i+1}</div><p style="font-size:12px;color:var(--text2)">Ingresa números entre ${g.mainRange[0]} y ${g.mainRange[1]}.</p>`;
+      return;
+    }
+    misNums.push(v);
+  }
+
+  // Verificar duplicados
+  if (new Set(misNums).size !== misNums.length) {
+    res.className = 'ver-resultado visible no-ganador';
+    res.innerHTML = `<div class="ver-res-title" style="color:var(--red)">⚠️ Números repetidos</div><p style="font-size:12px;color:var(--text2)">Todos los números deben ser distintos.</p>`;
+    return;
+  }
+
+  let miSuper = null;
+  if (g.hasSuper) {
+    const el = document.getElementById('vs0');
+    const v  = parseInt(el ? el.value : '');
+    if (isNaN(v) || v < g.superRange[0] || v > g.superRange[1]) {
+      res.className = 'ver-resultado visible no-ganador';
+      res.innerHTML = `<div class="ver-res-title" style="color:var(--red)">⚠️ SuperBalota inválida</div><p style="font-size:12px;color:var(--text2)">Ingresa un valor entre ${g.superRange[0]} y ${g.superRange[1]}.</p>`;
+      return;
+    }
+    miSuper = v;
+  }
+
+  if (!realData || !realData[currentGame] || realData[currentGame].length === 0) {
+    res.className = 'ver-resultado visible no-ganador';
+    res.innerHTML = `<div class="ver-res-title" style="color:var(--amber)">⚠️ Sin datos históricos</div><p style="font-size:12px;color:var(--text2)">Recarga la app para cargar los sorteos reales.</p>`;
+    return;
+  }
+
+  const sorteos   = realData[currentGame];
+  const misNumsSet = new Set(misNums);
+
+  // Buscar coincidencias en todos los sorteos
+  const matches = [];
+  sorteos.forEach(s => {
+    const hits = (s.numeros || []).filter(n => misNumsSet.has(n));
+    const superHit = g.hasSuper && miSuper !== null && s.super === miSuper;
+    if (hits.length >= 2 || (hits.length >= 1 && superHit)) {
+      matches.push({ s, hits, superHit, total: hits.length + (superHit ? 1 : 0) });
+    }
+  });
+
+  // Ordenar por más coincidencias
+  matches.sort((a, b) => b.total - a.total);
+
+  // Mejor resultado
+  const best = matches[0];
+  const bestHits = best ? best.hits.length : 0;
+  const bestSuper = best ? best.superHit : false;
+
+  // Premio estimado según hits
+  function getPremio(hits, superH, hasSuper) {
+    if (hasSuper) {
+      if (hits === 5 && superH) return { label: '🏆 ¡JACKPOT! 5+S', color: '#f59e0b' };
+      if (hits === 5)           return { label: '🥇 5 aciertos', color: '#3ecf8e' };
+      if (hits === 4 && superH) return { label: '🥈 4+S', color: '#3ecf8e' };
+      if (hits === 4)           return { label: '🥉 4 aciertos', color: '#4a8fff' };
+      if (hits === 3 && superH) return { label: '✨ 3+S', color: '#4a8fff' };
+      if (hits === 3)           return { label: '3 aciertos', color: '#8b90a7' };
+      if (hits === 2 && superH) return { label: '2+S', color: '#8b90a7' };
+      return { label: 'Sin premio', color: '#565b73' };
+    } else {
+      if (hits === 5) return { label: '🏆 ¡5 aciertos!', color: '#f59e0b' };
+      if (hits === 4) return { label: '🥇 4 aciertos', color: '#3ecf8e' };
+      if (hits === 3) return { label: '🥉 3 aciertos', color: '#4a8fff' };
+      return { label: 'Sin premio', color: '#565b73' };
+    }
+  }
+
+  if (!best) {
+    // Sin coincidencias relevantes — mostrar el último sorteo para comparar
+    const ultimo = sorteos[0];
+    const hitsUltimo = (ultimo.numeros||[]).filter(n => misNumsSet.has(n));
+    res.className = 'ver-resultado visible no-ganador';
+    res.innerHTML = `
+      <div class="ver-res-title" style="color:var(--red)">❌ Sin premios en ${sorteos.length} sorteos</div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Tu cartilla no coincide con 2+ números en ningún sorteo histórico.</p>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Último sorteo (${ultimo.fecha}):</div>
+      <div class="ver-match-row">
+        ${(ultimo.numeros||[]).map(n => `<div class="ver-match-ball ${hitsUltimo.includes(n)?'hit':'miss'}">${n}</div>`).join('')}
+        ${g.hasSuper && ultimo.super ? `<span class="ver-sep" style="font-size:14px">+</span><div class="ver-match-ball ${miSuper===ultimo.super?'hit':'miss'}" style="background:rgba(46,31,8,0.5);color:var(--amber)">${ultimo.super}</div>` : ''}
+      </div>
+      <p style="font-size:11px;color:var(--text3);margin-top:8px">Aciertos en último sorteo: <strong style="color:var(--text)">${hitsUltimo.length}${g.hasSuper&&miSuper===ultimo.super?' +S':''}</strong></p>`;
+    return;
+  }
+
+  const premio = getPremio(bestHits, bestSuper, g.hasSuper);
+  const cssClass = bestHits >= 4 ? 'ganador' : bestHits >= 3 ? 'parcial' : 'parcial';
+
+  // Mostrar top 5 coincidencias
+  const topMatches = matches.slice(0, 5);
+
+  res.className = `ver-resultado visible ${cssClass}`;
+  res.innerHTML = `
+    <div class="ver-res-title" style="color:${premio.color}">${premio.label}</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px">
+      Mejor resultado: <strong style="color:var(--text)">${bestHits} aciertos${bestSuper?' + SuperBalota':''}</strong> en ${matches.length} sorteo${matches.length!==1?'s':''} con coincidencias.
+    </p>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em">Mejores coincidencias</div>
+    ${topMatches.map(m => {
+      const p = getPremio(m.hits.length, m.superHit, g.hasSuper);
+      return `
+        <div class="ver-match-row">
+          <span class="ver-match-fecha">${m.s.fecha}</span>
+          ${(m.s.numeros||[]).map(n => `<div class="ver-match-ball ${m.hits.includes(n)?'hit':'miss'}">${n}</div>`).join('')}
+          ${g.hasSuper && m.s.super ? `<span style="color:var(--text3);font-size:14px">+</span><div class="ver-match-ball ${m.superHit?'hit':'miss'}" style="background:rgba(46,31,8,0.5);color:var(--amber)">${m.s.super}</div>` : ''}
+          <span class="ver-match-hits" style="background:${p.color}22;color:${p.color}">${m.hits.length}${m.superHit?'+S':''}</span>
+        </div>`;
+    }).join('')}
+    ${matches.length > 5 ? `<p style="font-size:11px;color:var(--text3);margin-top:8px">...y ${matches.length-5} sorteo${matches.length-5!==1?'s':''} más con coincidencias.</p>` : ''}
+  `;
+}
 
 /* ═══════════════════════════════════════════════
    MILOTO — IDENTIDAD Y STATS PROPIAS
