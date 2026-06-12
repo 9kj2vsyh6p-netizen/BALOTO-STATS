@@ -140,6 +140,32 @@ main { padding: 0 20px; flex: 1; }
 /* COMBO CARD MC extras */
 .mc-combo-meta { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; }
 .mc-meta-pill { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 600; }
+
+/* ── ESTADÍSTICAS AVANZADAS ── */
+.adv-section { margin-top: 24px; margin-bottom: 24px; }
+.adv-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
+.adv-box h3 { font-size: 12px; font-weight: 700; color: var(--text2); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.pair-row { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.pair-balls { display: flex; gap: 4px; align-items: center; min-width: 90px; }
+.pair-ball { width: 28px; height: 28px; border-radius: 50%; background: #1c2f52; color: #7db8ff; border: 1.5px solid #2d4b7a; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+.pair-bar-wrap { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+.pair-bar { height: 100%; background: #a78bfa; border-radius: 3px; }
+.pair-count { font-size: 11px; color: var(--text3); min-width: 30px; text-align: right; }
+.racha-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 6px; }
+.racha-cell { border-radius: 8px; padding: 6px 4px; text-align: center; }
+.racha-num { font-size: 13px; font-weight: 700; display: block; }
+.racha-dias { font-size: 10px; display: block; margin-top: 2px; }
+.heatmap-row { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; }
+.heatmap-label { font-size: 11px; color: var(--text2); min-width: 52px; }
+.heatmap-cells { display: flex; gap: 3px; flex-wrap: wrap; }
+.hmap-cell { width: 26px; height: 26px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+.trend-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.trend-num { font-size: 12px; font-weight: 700; color: var(--text); min-width: 26px; text-align: right; }
+.trend-bar-wrap { flex: 1; height: 8px; background: var(--bg3); border-radius: 3px; overflow: hidden; position: relative; }
+.trend-bar-hist { height: 100%; background: var(--text3); border-radius: 3px; opacity: 0.4; }
+.trend-bar-rec  { height: 100%; border-radius: 3px; position: absolute; top: 0; left: 0; }
+.trend-arrow { font-size: 14px; min-width: 18px; text-align: center; }
+.trend-val { font-size: 10px; color: var(--text3); min-width: 56px; text-align: right; }
 </style>
 </head>
 <body>
@@ -199,6 +225,11 @@ main { padding: 0 20px; flex: 1; }
       <div id="statsArea"></div>
     </div>
   </main>
+  
+    <div class="adv-section">
+      <div class="section-label">📊 Estadísticas avanzadas</div>
+      <div id="advArea"></div>
+    </div>
   <p class="disclaimer">⚠️ Uso educativo y entretenimiento. Ningún algoritmo garantiza premios. La lotería es 100% azar. Juega con responsabilidad.</p>
 </div>
 
@@ -732,6 +763,7 @@ function renderAll() {
   renderMethod();
   renderStats();
   renderUltimos();
+  renderAdvStats();
   document.getElementById('results').innerHTML = '';
   document.getElementById('mc-progress').classList.remove('visible');
   const btn = document.getElementById('genBtn');
@@ -863,6 +895,202 @@ function renderStats() {
     </div>
     ${mcBox}
     ${superBox}`;
+}
+
+
+/* ═══════════════════════════════════════════════
+   ESTADÍSTICAS AVANZADAS
+═══════════════════════════════════════════════ */
+
+function calcParesFrecuentes(gameId) {
+  if (!realData || !realData[gameId]) return [];
+  const sorteos = realData[gameId];
+  const pares = {};
+  sorteos.forEach(s => {
+    const nums = (s.numeros || []).slice().sort((a,b)=>a-b);
+    for (let i = 0; i < nums.length; i++)
+      for (let j = i+1; j < nums.length; j++) {
+        const k = nums[i] + '-' + nums[j];
+        pares[k] = (pares[k] || 0) + 1;
+      }
+  });
+  return Object.entries(pares)
+    .sort((a,b) => b[1]-a[1])
+    .slice(0, 10)
+    .map(([k,v]) => ({ nums: k.split('-').map(Number), count: v }));
+}
+
+function calcRachas(gameId) {
+  if (!realData || !realData[gameId]) return {};
+  const g = GAMES[gameId];
+  const pool = range(...g.mainRange);
+  const sorteos = realData[gameId];
+  const rachas = {};
+  pool.forEach(n => {
+    let streak = 0;
+    for (let i = 0; i < sorteos.length; i++) {
+      if ((sorteos[i].numeros || []).includes(n)) break;
+      streak++;
+    }
+    rachas[n] = streak;
+  });
+  return rachas;
+}
+
+function calcHeatmap(gameId) {
+  if (!realData || !realData[gameId]) return {};
+  const g = GAMES[gameId];
+  const pool = range(...g.mainRange);
+  const freqs = getFreqs(gameId, 'main');
+  const max = g.mainRange[1];
+  const decades = [
+    { label: '1–10',  nums: pool.filter(n => n <= 10) },
+    { label: '11–20', nums: pool.filter(n => n >= 11 && n <= 20) },
+    { label: '21–30', nums: pool.filter(n => n >= 21 && n <= 30) },
+    { label: '31–' + max, nums: pool.filter(n => n >= 31) }
+  ];
+  const maxF = Math.max(...pool.map(n => freqs[n] || 0));
+  return { decades, freqs, maxF };
+}
+
+function calcTendencia(gameId) {
+  if (!realData || !realData[gameId]) return [];
+  const g = GAMES[gameId];
+  const pool = range(...g.mainRange);
+  const sorteos = realData[gameId];
+  const total = sorteos.length;
+  const recent20 = sorteos.slice(0, 20);
+  const freqHist = getFreqs(gameId, 'main');
+  const maxHist = Math.max(...pool.map(n => freqHist[n] || 0));
+
+  return pool.map(n => {
+    const recCount = recent20.filter(s => (s.numeros||[]).includes(n)).length;
+    const histRate = (freqHist[n] || 0) / Math.max(total, 1);
+    const recRate  = recCount / 20;
+    const delta    = recRate - histRate;
+    return { n, recCount, histCount: freqHist[n]||0, histRate, recRate, delta };
+  })
+  .sort((a,b) => Math.abs(b.delta) - Math.abs(a.delta))
+  .slice(0, 12);
+}
+
+function renderAdvStats() {
+  const el = document.getElementById('advArea');
+  if (!el) return;
+  if (!realData || !realData[currentGame]) {
+    el.innerHTML = '<div class="adv-box" style="color:var(--text3);font-size:12px;text-align:center;padding:20px">Cargando datos reales...</div>';
+    return;
+  }
+
+  // ── 1. PARES FRECUENTES ──
+  const pares = calcParesFrecuentes(currentGame);
+  const maxPair = pares[0]?.count || 1;
+  const paresHTML = pares.map(p => `
+    <div class="pair-row">
+      <div class="pair-balls">
+        <div class="pair-ball">${p.nums[0]}</div>
+        <span style="color:var(--text3);font-size:10px">+</span>
+        <div class="pair-ball">${p.nums[1]}</div>
+      </div>
+      <div class="pair-bar-wrap"><div class="pair-bar" style="width:${Math.round(p.count/maxPair*100)}%"></div></div>
+      <span class="pair-count">${p.count}x</span>
+    </div>`).join('');
+
+  // ── 2. RACHAS ACTIVAS ──
+  const rachas = calcRachas(currentGame);
+  const g = GAMES[currentGame];
+  const pool = range(...g.mainRange);
+  const maxRacha = Math.max(...Object.values(rachas));
+  // Colores de calor: verde (descansado poco) → rojo (mucho sin salir)
+  const rachaHTML = pool.map(n => {
+    const r = rachas[n] || 0;
+    const pct = r / Math.max(maxRacha, 1);
+    // interpolación verde→ámbar→rojo
+    let bg, color;
+    if (pct < 0.33)      { bg = 'rgba(62,207,142,0.18)';  color = '#3ecf8e'; }
+    else if (pct < 0.66) { bg = 'rgba(245,158,11,0.18)';  color = '#f59e0b'; }
+    else                 { bg = 'rgba(248,113,113,0.18)';  color = '#f87171'; }
+    return `
+      <div class="racha-cell" style="background:${bg}">
+        <span class="racha-num" style="color:${color}">${n}</span>
+        <span class="racha-dias" style="color:${color}">${r}s</span>
+      </div>`;
+  }).join('');
+
+  // ── 3. HEATMAP DÉCADAS ──
+  const { decades, freqs, maxF } = calcHeatmap(currentGame);
+  const hmHTML = decades.map(d => {
+    const cells = d.nums.map(n => {
+      const pct = (freqs[n]||0) / Math.max(maxF, 1);
+      let bg, color;
+      if (pct < 0.4)      { bg = 'rgba(74,143,255,0.12)';  color = '#4a8fff'; }
+      else if (pct < 0.7) { bg = 'rgba(245,158,11,0.20)';  color = '#f59e0b'; }
+      else                { bg = 'rgba(248,113,113,0.22)';  color = '#f87171'; }
+      return `<div class="hmap-cell" style="background:${bg};color:${color}">${n}</div>`;
+    }).join('');
+    const decFreq = d.nums.reduce((s,n) => s+(freqs[n]||0), 0);
+    return `
+      <div class="heatmap-row">
+        <span class="heatmap-label">${d.label}</span>
+        <div class="heatmap-cells">${cells}</div>
+        <span style="font-size:10px;color:var(--text3);margin-left:6px">${decFreq}</span>
+      </div>`;
+  }).join('');
+
+  // ── 4. TENDENCIA RECIENTE ──
+  const tendencia = calcTendencia(currentGame);
+  const maxRec = Math.max(...tendencia.map(t => t.recCount), 1);
+  const maxHst = Math.max(...tendencia.map(t => t.histCount), 1);
+  const trendHTML = tendencia.map(t => {
+    const up   = t.delta > 0.01;
+    const down = t.delta < -0.01;
+    const arrow = up ? '↑' : down ? '↓' : '→';
+    const arrowColor = up ? '#3ecf8e' : down ? '#f87171' : '#565b73';
+    const barColor   = up ? '#3ecf8e' : down ? '#f87171' : '#565b73';
+    const histPct = Math.round(t.histCount / maxHst * 100);
+    const recPct  = Math.round(t.recCount  / maxRec  * 100);
+    return `
+      <div class="trend-row">
+        <span class="trend-num">${t.n}</span>
+        <div class="trend-bar-wrap">
+          <div class="trend-bar-hist" style="width:${histPct}%"></div>
+          <div class="trend-bar-rec"  style="width:${recPct}%;background:${barColor};opacity:0.85"></div>
+        </div>
+        <span class="trend-arrow" style="color:${arrowColor}">${arrow}</span>
+        <span class="trend-val">${t.recCount}/20 vs ${(t.histRate*100).toFixed(1)}%</span>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="adv-box">
+      <h3>🔗 Pares más frecuentes</h3>
+      ${paresHTML}
+    </div>
+    <div class="adv-box">
+      <h3>⏱️ Rachas activas — sorteos sin salir</h3>
+      <div class="racha-grid">${rachaHTML}</div>
+      <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
+        <span style="font-size:10px;color:#3ecf8e">● Reciente (0–33%)</span>
+        <span style="font-size:10px;color:#f59e0b">● Moderado (33–66%)</span>
+        <span style="font-size:10px;color:#f87171">● Largo (66–100%)</span>
+      </div>
+    </div>
+    <div class="adv-box">
+      <h3>🗺️ Heatmap por décadas</h3>
+      <div style="display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+        <span style="font-size:10px;color:#4a8fff">● Frío</span>
+        <span style="font-size:10px;color:#f59e0b">● Templado</span>
+        <span style="font-size:10px;color:#f87171">● Caliente</span>
+      </div>
+      ${hmHTML}
+    </div>
+    <div class="adv-box">
+      <h3>📈 Tendencia reciente vs histórico (top variaciones)</h3>
+      <div style="display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+        <span style="font-size:10px;color:var(--text3)">Barra oscura = histórico · Barra color = últimos 20 sorteos</span>
+      </div>
+      ${trendHTML}
+    </div>`;
 }
 
 /* ═══════════════════════════════════════════════
