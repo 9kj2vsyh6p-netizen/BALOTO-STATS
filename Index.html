@@ -316,6 +316,13 @@ const ALGOS = [
   { id:'par_impar',    icon:'🔢', name:'Par/Impar',     explain:'Distribuye 3 impares y 2 pares.' },
   { id:'cuadrantes',   icon:'🗺️', name:'Cuadrantes',    explain:'Garantiza números en distintas zonas del rango.' },
   { id:'delta',        icon:'📐', name:'Delta',          explain:'Construye combinaciones usando diferencias típicas entre números.' },
+{
+  id:'iapremium',
+  icon:'🧠',
+  name:'IA Premium',
+  explain:'Genera cientos de jugadas internas, calcula un Índice Premium y muestra únicamente las mejores recomendaciones.'
+},
+
   { id:'montecarlo',   icon:'🎲', name:'Monte Carlo',   explain:'Simula 100,000 sorteos virtuales y extrae las combinaciones más probables según la distribución histórica real.', isMC: true }
 ];
 
@@ -589,16 +596,85 @@ const ALGO_FNS = {
 /* ═══════════════════════════════════════════════
    GENERACIÓN DE JUGADAS
 ═══════════════════════════════════════════════ */
-async function generate() {
+function scorePremium(nums, mf){
+
+  let score = 0;
+
+  const suma = nums.reduce((a,b)=>a+b,0);
+
+  score += nums.reduce((s,n)=>s+(mf[n]||0),0);
+
+  if(suma >= 90 && suma <= 130) score += 50;
+
+  const pares = nums.filter(n=>n%2===0).length;
+
+  if(pares===2 || pares===3) score += 25;
+
+  const rango = Math.max(...nums)-Math.min(...nums);
+
+  if(rango>=20 && rango<=35) score += 25;
+
+  return score;
+}
+
+function generateIAPremium(g, qty){
+
+  const mf = getFreqs(currentGame,'main');
+  const pool = range(...g.mainRange);
+
+  let candidatos = [];
+
+  for(let i=0;i<500;i++){
+
+    const algos = [
+      ALGO_FNS.frecuencia,
+      ALGO_FNS.delta,
+      ALGO_FNS.cuadrantes,
+      ALGO_FNS.ia
+    ];
+
+    const fn = algos[i % algos.length];
+
+   const nums = fn(pool, g.mainCount, mf).sort((a,b)=>a-b);
+
+    candidatos.push({
+      nums,
+      score: scorePremium(nums,mf)
+    });
+
+  }
+
+  candidatos.sort((a,b)=>b.score-a.score);
+
+  return candidatos.slice(0,qty);
+
+}
+  async function generate() {
   const g    = GAMES[currentGame];
   const qty  = parseInt(document.getElementById('qty').value);
   const btn  = document.getElementById('genBtn');
 
-  if (currentAlgo === 'montecarlo') {
+if (currentAlgo === 'montecarlo') {
     await generateMonteCarlo(g, qty, btn);
-  } else {
+
+} else if (currentAlgo === 'iapremium') {
+
+    const combos = generateIAPremium(g, qty);
+
+    renderCombos(
+        combos.map(c => ({
+            nums: c.nums,
+            sup: null,
+            score: c.score
+        })),
+        false
+    );
+
+} else {
+
     generateClassic(g, qty, btn);
-  }
+
+}
 }
 
 function generateClassic(g, qty, btn) {
