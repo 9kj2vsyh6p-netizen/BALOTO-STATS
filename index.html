@@ -141,6 +141,18 @@ main { padding: 0 20px; flex: 1; }
 .mc-combo-meta { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; }
 .mc-meta-pill { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 600; }
 
+
+/* ── MILOTO IDENTIDAD ── */
+.miloto-banner { background: linear-gradient(135deg, rgba(62,207,142,0.08), rgba(62,207,142,0.03)); border: 1px solid rgba(62,207,142,0.25); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; display: none; }
+.miloto-banner.visible { display: block; }
+.miloto-banner-title { font-size: 14px; font-weight: 700; color: var(--green); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.miloto-banner-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.miloto-stat-card { background: rgba(62,207,142,0.08); border-radius: var(--radius-sm); padding: 8px 10px; text-align: center; }
+.miloto-stat-val { font-size: 18px; font-weight: 700; color: var(--green); display: block; }
+.miloto-stat-lbl { font-size: 10px; color: var(--text3); margin-top: 2px; display: block; }
+.ball-miloto { background: #0d2b1a; color: #3ecf8e; border: 1.5px solid #1a5c3a; }
+.gtab-miloto.active { border-color: var(--green) !important; background: var(--green-bg) !important; color: var(--green) !important; }
+
 /* ── ESTADÍSTICAS AVANZADAS ── */
 .adv-section { margin-top: 24px; margin-bottom: 24px; }
 .adv-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
@@ -187,6 +199,14 @@ main { padding: 0 20px; flex: 1; }
   </header>
   <main>
     <div class="game-pill" id="gamePill"></div>
+
+
+    <!-- Banner Miloto -->
+    <div class="miloto-banner" id="milotoBanner">
+      <div class="miloto-banner-title">⭐ Mi Loto — Lotería diferente</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.6">Rango exclusivo 1–39 · Sin SuperBalota · Sorteos Lun, Mar, Jue y Vie · Premio fijo + acumulado</div>
+      <div class="miloto-banner-grid" id="milotoStatsCards"></div>
+    </div>
 
     <div class="section-label">Algoritmo</div>
     <div class="algo-scroll" id="algoScroll"></div>
@@ -721,7 +741,7 @@ function renderCombos(combos, isMC) {
           ${scoreHtml}
         </div>
         <div class="balls">
-          ${c.nums.map(n => `<div class="ball ball-main">${n}</div>`).join('')}
+          ${c.nums.map(n => `<div class="ball ${currentGame==='miloto'?'ball-miloto':'ball-main'}">${n}</div>`).join('')}
           ${c.sup !== null ? `<span class="ball-sep">+</span><div class="ball ${GAMES[currentGame].superClass}">${c.sup}</div>` : ''}
         </div>
         ${mcMeta}
@@ -764,6 +784,7 @@ function renderAll() {
   renderStats();
   renderUltimos();
   renderAdvStats();
+  renderMilotoBanner();
   document.getElementById('results').innerHTML = '';
   document.getElementById('mc-progress').classList.remove('visible');
   const btn = document.getElementById('genBtn');
@@ -773,7 +794,7 @@ function renderAll() {
 
 function renderTabs() {
   document.getElementById('gameTabs').innerHTML = Object.entries(GAMES).map(([id, g]) => `
-    <button class="gtab ${id === currentGame ? 'active' : ''}" onclick="setGame('${id}')">
+    <button class="gtab ${id === currentGame ? 'active' : ''} ${id==='miloto'?'gtab-miloto':''}" onclick="setGame('${id}')">
       <span class="tab-emoji">${g.emoji}</span>${g.name}
     </button>`).join('');
 }
@@ -823,7 +844,7 @@ function renderUltimos() {
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span style="font-size:11px;color:var(--text3);min-width:76px">${s.fecha}</span>
         <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          ${s.numeros.map(n => `<div class="ball ball-main" style="width:34px;height:34px;font-size:13px">${n}</div>`).join('')}
+          ${s.numeros.map(n => `<div class="ball ${currentGame==='miloto'?'ball-miloto':'ball-main'}" style="width:34px;height:34px;font-size:13px">${n}</div>`).join('')}
           ${g.hasSuper && s.super ? `<span style="color:var(--text3);font-size:16px">+</span><div class="ball ${g.superClass}" style="width:36px;height:36px;font-size:13px">${s.super}</div>` : ''}
         </div>
       </div>`).join('')}`;
@@ -897,6 +918,107 @@ function renderStats() {
     ${superBox}`;
 }
 
+
+
+/* ═══════════════════════════════════════════════
+   MILOTO — IDENTIDAD Y STATS PROPIAS
+═══════════════════════════════════════════════ */
+
+function renderMilotoBanner() {
+  const banner = document.getElementById('milotoBanner');
+  if (!banner) return;
+
+  if (currentGame !== 'miloto') {
+    banner.classList.remove('visible');
+    return;
+  }
+  banner.classList.add('visible');
+
+  if (!realData || !realData.miloto) {
+    document.getElementById('milotoStatsCards').innerHTML = '';
+    return;
+  }
+
+  const sorteos = realData.miloto;
+  const total   = sorteos.length;
+  const freqs   = getFreqs('miloto', 'main');
+  const pool    = range(1, 39);
+
+  // Número más caliente
+  const topNum  = [...pool].sort((a,b) => (freqs[b]||0)-(freqs[a]||0))[0];
+  // Número más frío
+  const coldNum = [...pool].sort((a,b) => (freqs[a]||0)-(freqs[b]||0))[0];
+  // Racha más larga activa
+  let maxRacha = 0, rachaNum = 0;
+  pool.forEach(n => {
+    let r = 0;
+    for (let i = 0; i < sorteos.length; i++) {
+      if ((sorteos[i].numeros||[]).includes(n)) break;
+      r++;
+    }
+    if (r > maxRacha) { maxRacha = r; rachaNum = n; }
+  });
+
+  // Suma promedio histórica
+  const avgSum = Math.round(
+    sorteos.reduce((s, so) => s + (so.numeros||[]).reduce((a,b)=>a+b,0), 0) / Math.max(total,1)
+  );
+
+  // Par más frecuente
+  const pares = {};
+  sorteos.forEach(s => {
+    const nums = (s.numeros||[]).slice().sort((a,b)=>a-b);
+    for (let i=0;i<nums.length;i++)
+      for (let j=i+1;j<nums.length;j++) {
+        const k=nums[i]+'-'+nums[j];
+        pares[k]=(pares[k]||0)+1;
+      }
+  });
+  const topPar = Object.entries(pares).sort((a,b)=>b[1]-a[1])[0];
+  const parLabel = topPar ? topPar[0].replace('-',' + ') + ' (' + topPar[1] + 'x)' : '—';
+
+  // Década más frecuente
+  const decadas = [
+    { label:'1–10',  nums: pool.filter(n=>n<=10) },
+    { label:'11–20', nums: pool.filter(n=>n>=11&&n<=20) },
+    { label:'21–30', nums: pool.filter(n=>n>=21&&n<=30) },
+    { label:'31–39', nums: pool.filter(n=>n>=31) }
+  ];
+  const topDec = decadas.sort((a,b) =>
+    b.nums.reduce((s,n)=>s+(freqs[n]||0),0) - a.nums.reduce((s,n)=>s+(freqs[n]||0),0)
+  )[0];
+
+  document.getElementById('milotoStatsCards').innerHTML = `
+    <div class="miloto-stat-card">
+      <span class="miloto-stat-val">${topNum}</span>
+      <span class="miloto-stat-lbl">Número caliente</span>
+    </div>
+    <div class="miloto-stat-card">
+      <span class="miloto-stat-val">${rachaNum}</span>
+      <span class="miloto-stat-lbl">Mayor racha (${maxRacha}s)</span>
+    </div>
+    <div class="miloto-stat-card">
+      <span class="miloto-stat-val">${avgSum}</span>
+      <span class="miloto-stat-lbl">Suma promedio</span>
+    </div>
+    <div class="miloto-stat-card">
+      <span class="miloto-stat-val">${topDec.label}</span>
+      <span class="miloto-stat-lbl">Década dominante</span>
+    </div>
+    <div class="miloto-stat-card">
+      <span class="miloto-stat-val">${coldNum}</span>
+      <span class="miloto-stat-lbl">Número frío</span>
+    </div>
+    <div class="miloto-stat-card">
+      <span class="miloto-stat-val">${total}</span>
+      <span class="miloto-stat-lbl">Sorteos en BD</span>
+    </div>
+  `;
+}
+
+function getMilotoBallClass(gameId) {
+  return gameId === 'miloto' ? 'ball-miloto' : 'ball-main';
+}
 
 /* ═══════════════════════════════════════════════
    ESTADÍSTICAS AVANZADAS
